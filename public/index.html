@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Awaaz Run — March to Jantar Mantar</title>
+<meta name="referrer" content="no-referrer">
+<link href="fonts/fonts.css" rel="stylesheet">
+<link rel="preload" href="fonts/anton_v27_1Ptgg87LROyAm3Kz-C8.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/archivo_v25_k3kPo8UDI-1M0wlSV9XAw6lQkqWY8Q82sLydOxI.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1d1a16">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+:root{--sand:#efe4cc;--ink:#1d1a16;--saffron:#f08a1c;--marigold:#ffb627;--green:#2f7d4f;--khaki:#b39457;--navy:#1f2f57;--paper:#fffaf0;--red:#c8321e;--muted:#6f6456}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--ink);font-family:'Archivo',system-ui,sans-serif;color:var(--ink);touch-action:none;-webkit-user-select:none;user-select:none}
+canvas#game{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;top:0;left:0;right:0;display:flex;gap:8px;align-items:stretch;padding:10px;pointer-events:none;flex-wrap:wrap}
+.chip{background:var(--paper);border:2px solid var(--ink);border-radius:6px;padding:6px 10px;box-shadow:3px 3px 0 var(--ink);font-weight:800;font-size:13px;line-height:1.1;font-variant-numeric:tabular-nums}
+.chip small{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chip.goal{background:var(--marigold)} .chip.goal small{color:#5a4310}
+.chip.heat{background:var(--navy);color:var(--paper)} .chip.heat small{color:#c7cfe6}
+.stam{width:110px}
+.bar{height:8px;border:2px solid var(--ink);border-radius:4px;margin-top:4px;overflow:hidden;background:#e6dcc5}
+.bar i{display:block;height:100%;background:var(--saffron);width:100%}
+.btn-mute{pointer-events:auto;cursor:pointer}
+.btn-map{pointer-events:auto;cursor:pointer;margin-left:auto}
+.anon{margin-top:14px;border:2px dashed var(--ink);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.45;background:#f6edd9}
+.anon b{font-weight:800}
+.toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:6px;font-weight:800;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:92vw;text-align:center}
+.toast.show{opacity:1}
+@media (max-width:620px){.toast{top:124px;font-size:13px}}
+.hidebar{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--paper);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);border-radius:8px;padding:8px 14px;font-weight:800;font-size:14px;display:none;z-index:3;max-width:calc(100vw - 40px);text-align:center;line-height:1.5}
+@media (pointer:coarse){.hidebar{bottom:200px;font-size:13px}}
+.hidebar.show{display:block}
+.hidebar kbd{background:var(--ink);color:var(--paper);border-radius:4px;padding:2px 7px;font-family:inherit}
+.hidebar.alert{background:#ffd9cf;animation:pulse .5s infinite alternate}
+@keyframes pulse{to{transform:translateX(-50%) scale(1.04)}}
+.overlay{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;background:rgba(29,26,22,.6);padding:16px;z-index:5;overflow:auto}
+.overlay.hidden{display:none}
+.card{background:var(--paper);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink);border-radius:10px;max-width:640px;width:100%;padding:26px 24px 22px;position:relative;overflow:hidden;margin:auto}
+.card:before{content:"";position:absolute;left:0;right:0;top:0;height:10px;background:linear-gradient(90deg,#FF9933 0 33.3%,#fff 33.3% 66.6%,#138808 66.6%)}
+.kicker{font-family:'Tiro Devanagari Hindi',serif;font-size:20px;color:var(--saffron);margin-top:6px}
+h1{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(40px,9vw,64px);line-height:.95;text-transform:uppercase}
+h2{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(28px,7vw,42px);line-height:1;text-transform:uppercase}
+h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:18px}
+.card p{margin-top:10px;font-size:15px;line-height:1.45;color:#3a332b}
+.chars{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.char{border:3px solid var(--ink);border-radius:8px;background:#f6edd9;padding:8px 8px 10px;cursor:pointer;text-align:center;font-family:inherit;color:var(--ink)}
+.char canvas{width:100%;height:110px;display:block}
+.char b{display:block;font-family:'Anton',sans-serif;font-weight:400;font-size:22px;text-transform:uppercase;letter-spacing:.02em}
+.char span{display:block;font-size:12px;line-height:1.3;color:#4a4036;margin-top:2px}
+.char[aria-pressed="true"]{background:var(--marigold);box-shadow:4px 4px 0 var(--ink);transform:translate(-2px,-2px)}
+.char:focus-visible,.start:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+.starts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.start{border:2px solid var(--ink);border-radius:20px;padding:6px 12px;background:var(--paper);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;color:var(--ink)}
+.start[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.rules{margin-top:10px;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13.5px;align-items:center}
+.rules b{display:inline-block;min-width:30px;text-align:center;background:var(--ink);color:var(--paper);border-radius:4px;padding:2px 6px;font-size:12px}
+.cta{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
+button.go{font-family:'Anton',sans-serif;font-size:22px;letter-spacing:.04em;text-transform:uppercase;background:var(--saffron);color:var(--ink);border:3px solid var(--ink);border-radius:8px;padding:10px 26px;box-shadow:4px 4px 0 var(--ink);cursor:pointer}
+button.go.alt{background:var(--paper)}
+button.go:hover{background:var(--marigold)} button.go:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+button.go:focus-visible{outline:3px solid var(--navy);outline-offset:3px}
+.stats{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stats div{border:2px solid var(--ink);border-radius:6px;padding:8px;text-align:center;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;background:var(--paper)}
+.stats small{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.credit{margin-top:14px;font-size:11px;color:var(--muted)} .credit a{color:var(--muted)}
+#stick{position:fixed;width:120px;height:120px;border-radius:50%;border:3px solid rgba(29,26,22,.5);background:rgba(255,250,240,.35);display:none;pointer-events:none;transform:translate(-50%,-50%);z-index:3}
+#stick i{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:var(--saffron);border:3px solid var(--ink)}
+.tbtn{position:fixed;right:18px;width:78px;height:78px;border-radius:50%;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);font-family:'Anton',sans-serif;font-size:16px;display:none;z-index:3;color:var(--ink)}
+#sprintBtn{bottom:22px;background:var(--saffron)}
+#hideBtn{bottom:112px;background:var(--paper)}
+#beatBtn{bottom:22px;right:106px;background:#ff7f00}
+#blockBtn{bottom:112px;right:106px;background:#138808;color:#fffaf0}
+@media (pointer:coarse){#sprintBtn{display:block}#hideBtn.on,#beatBtn.on,#blockBtn.on{display:block}}
+.chip.want span{color:#c8321e;letter-spacing:1px;font-size:15px}
+.chip.want em{display:block;font-style:normal;font-size:10px;color:#2f7d4f}
+.chip.want em:empty{display:none}
+.chip.want.boost{background:var(--marigold)}
+/* victory */
+#winScreen{background:#1d1a16;align-items:stretch;padding:0;flex-direction:column}
+#flagCv{position:absolute;inset:0;width:100%;height:100%}
+.winUI{position:relative;z-index:2;margin-top:auto;padding:16px;display:flex;justify-content:center}
+.raise{font-family:'Anton',sans-serif;font-size:24px;text-transform:uppercase;letter-spacing:.04em;background:#FF9933;border:3px solid var(--ink);border-radius:10px;box-shadow:5px 5px 0 var(--ink);padding:14px 28px;cursor:pointer;color:var(--ink);touch-action:none}
+.raise:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.winCard{position:relative;z-index:2;margin:auto auto 16px;max-width:620px;width:calc(100% - 32px);display:none}
+.winCard.show{display:block}
+.winCard .card{margin:0}
+.victory{margin-top:8px;font-family:'Anton',sans-serif;font-size:clamp(18px,4.4vw,26px);line-height:1.15;text-transform:uppercase;color:#138808}
+@media (max-width:560px){.chip{font-size:12px;padding:5px 8px}.stam{width:84px}.hide-sm{display:none}.stats{grid-template-columns:repeat(2,1fr)}.char span{font-size:11px}.char canvas{height:90px}}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Top-down chase game on a map of central Delhi"></canvas>
+
+<div class="hud" id="hud">
+  <div class="chip goal"><small>Jantar Mantar</small><span id="hGoal">–</span></div>
+  <div class="chip"><small>Time</small><span id="hTime">0:00</span></div>
+  <div class="chip"><small>Score</small><span id="hScore">0</span></div>
+  <div class="chip hide-sm"><small>Rally</small><span id="hRally">0</span></div>
+  <div class="chip heat"><small>Police</small><span id="hCops">0</span></div>
+  <div class="chip want" id="wantChip"><small>Wanted</small><span id="hStars">☆☆☆☆☆</span><em id="hBoost"></em></div>
+  <div class="chip stam"><small>Stamina</small><div class="bar"><i id="hStam"></i></div></div>
+  <div class="chip btn-map" id="mapBtn" role="button" tabindex="0" aria-label="Switch map view"><small>Map</small><span id="hMap">Street</span></div>
+  <div class="chip btn-mute" id="muteBtn" role="button" tabindex="0" aria-label="Toggle sound"><small>Sound</small><span id="hMute">On</span></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="hidebar" id="hideBar"></div>
+<div id="stick"><i></i></div>
+<button class="tbtn" id="hideBtn" aria-label="Hide or leave shop">HIDE</button>
+<button class="tbtn" id="sprintBtn" aria-label="Sprint">RUN</button>
+<button class="tbtn" id="beatBtn" aria-label="Beat the minister">BEAT</button>
+<button class="tbtn" id="blockBtn" aria-label="Block the minister's car">BLOCK</button>
+
+<div class="overlay" id="startScreen">
+  <div class="card">
+    <div class="kicker">आवाज़ उठाओ — raise your voice</div>
+    <h1>Awaaz Run</h1>
+    <p class="story"><b>The story.</b> Across the country, people are out on the streets against the government. Tonight the call went out: everyone marches to Jantar Mantar, and whoever gets there first raises the Tiranga and claims the day for the people. The city has other plans.</p>
+    <p>Make it to Jantar Mantar. Police are coming out of 21 real stations across Delhi, they're putting up barricades on the roads into Jantar Mantar, and they'll take anyone they catch to the nearest police station. Duck into shops to shake them off, find a way around the barricades, and raise the Tiranga when you get there.</p>
+    <h3>Choose your character</h3>
+    <div class="chars" id="chars"></div>
+    <h3>Start from</h3>
+    <div class="starts" id="starts"></div>
+    <h3>Map view</h3>
+    <div class="starts" id="modes"></div>
+    <div class="rules">
+      <b>WASD</b><span>Run along the roads (arrow keys or drag on touch)</span>
+      <b>Shift</b><span>Sprint while you have stamina</span>
+      <b>E</b><span>Hide in a nearby shop or mall. Big stores have a back door</span>
+      <b>F</b><span>Beat a minister in a car with a BJP flag. Your wanted stars vanish and you get a 12 s boost to smash barricades and knock cops aside</span>
+      <b>G</b><span>Block a minister's car: sit in front of it and hold the road for 6 s. The crowd cheers and covers you for 90 s, but the police take notice</span>
+      <b>V</b><span>Switch between street map and satellite view (or tap the Map button)</span>
+      <b>Crowd</b><span>Walk (don't sprint) among 3 or more protesters to blend in. Police lose you and your stars cool down</span>
+      <b>Can</b><span>Energy drink: refills stamina and gives you 10 minutes of crowd cover. Protesters follow you and 2 are enough to blend in</span>
+      <b>Jail</b><span>If police catch you, they take you to the nearest station and release you after 30 s. Get detained 3 times and the day is lost</span>
+      <b>★</b><span>Wanted stars go up when police spot you, when you free detainees, spread pamphlets or dodge a chase. More stars mean more, faster police</span>
+    </div>
+    <div class="anon" id="anonBox"><b>Anonymous play.</b> You are <b id="alias">Protester</b>. No sign-in, no name, no cookies, no saved data, no analytics. Fonts and map data come with the game. Satellite view loads image tiles from Esri's servers, which see your IP address like any online map.</div>
+    <div class="cta"><button class="go" id="startBtn">Start the march</button></div>
+    <div class="credit">Roads, shops, parks and police stations: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a> (roads, buildings, metro). Satellite imagery © Esri, Maxar, Earthstar Geographics. Fictional arcade game.</div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="overScreen">
+  <div class="card">
+    <div class="kicker">हिरासत में — detained</div>
+    <h2 id="overTitle">Detained</h2>
+    <p id="overText"></p>
+    <div class="stats">
+      <div><small>Survived</small><span id="oTime">0:00</span></div>
+      <div><small>Score</small><span id="oScore">0</span></div>
+      <div><small>Freed</small><span id="oRescue">0</span></div>
+      <div><small>To go</small><span id="oDist">0</span></div>
+    </div>
+    <div class="cta"><button class="go" id="againBtn">Try again</button><button class="go alt" id="changeBtn">Change character</button></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="winScreen">
+  <canvas id="flagCv"></canvas>
+  <div class="winUI" id="raiseWrap"><button class="raise" id="raiseBtn">Hold to raise the Tiranga</button></div>
+  <div class="winCard" id="winCard">
+    <div class="card">
+      <div class="kicker">जीत हमारी है — the victory is ours</div>
+      <h2>Tiranga raised at Jantar Mantar</h2>
+      <div class="victory" id="victoryLine"></div>
+      <div class="stats">
+        <div><small>Time</small><span id="wTime">0:00</span></div>
+        <div><small>Score</small><span id="wScore">0</span></div>
+        <div><small>Rally</small><span id="wRally">0</span></div>
+        <div><small>Police fooled</small><span id="wFooled">0</span></div>
+      </div>
+      <div class="cta"><button class="go" id="winAgain">March again</button><button class="go alt" id="winChange">Change character</button></div>
+    </div>
+  </div>
+</div>
+
+<script src="map.js"></script>
+<script src="sprites.js"></script>
+<script src="game.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
